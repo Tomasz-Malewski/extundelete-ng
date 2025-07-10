@@ -560,8 +560,8 @@ MAKEFLAGS=
 # Identity of this package.
 PACKAGE_NAME='extundelete'
 PACKAGE_TARNAME='extundelete'
-PACKAGE_VERSION='0.2.4'
-PACKAGE_STRING='extundelete 0.2.4'
+PACKAGE_VERSION='0.2.4-tm20250601'
+PACKAGE_STRING='extundelete 0.2.4-tm2050601'
 PACKAGE_BUGREPORT='extundelete.sourceforge.net'
 PACKAGE_URL=''
 

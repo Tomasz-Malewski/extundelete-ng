@@ -1,4 +1,4 @@
-// extundelete -- An ext3 and ext4 file system undeletion utility
+// extundelete -- An ext3 and ext4 file system undeletion utility 2025 Edition by Tomasz Malewski
 // 
 // Parts of this program are based upon ext3grep, which was licensed under the
 // GPL v2 or later and copyright 2008 by Carlo Wood.
@@ -160,8 +160,8 @@ journal_map_t journ_map;
 std::ostream Log::error(std::cerr.rdbuf());
 std::ostream Log::warn(std::cout.rdbuf());
 std::ostream Log::status(std::cout.rdbuf());
-std::ostream Log::info(0);
-std::ostream Log::debug(0);
+std::ostream Log::info(std::cout.rdbuf()); 
+std::ostream Log::debug(std::cout.rdbuf()); 
 
 // Define triad: a class similar to std::pair, but with three values.
 template <class T1, class T2, class T3> struct triad
@@ -193,7 +193,7 @@ template<class T1, class T2, class T3>
 static int extundelete_test_inode_bitmap(const ext2_filsys fs, ext2_ino_t ino)
 {
 	int allocated = -1;
-	if(! EXT2_SB(fs->super)->s_feature_incompat & EXT4_FEATURE_INCOMPAT_64BIT) {
+	if(!(EXT2_SB(fs->super)->s_feature_incompat & EXT4_FEATURE_INCOMPAT_64BIT)) {
 		allocated = ext2fs_test_inode_bitmap(fs->inode_map, ino);
 	}
 #ifdef HAVE_EXT2FS_TEST_INODE_BITMAP2
@@ -1215,6 +1215,10 @@ static blk64_t journ_get_dir_block(ext2_filsys /*fs*/, blk64_t blknum, void * /*
 	// oldblks2 is (jblk, sequence)
 	std::list<block_pair_t> oldblks2;
 	std::pair<journal_map_t::iterator, journal_map_t::iterator> ret;
+	if (journ_map.empty()) {
+	Log::debug << "Journal map is empty for block " << blknum << std::endl;
+	return EU_RESTORE_FAIL;
+	}	
 	ret = journ_map.equal_range(blknum);
 	journal_map_t::iterator it;
 	for(it = ret.first; it != ret.second; ++it) {
@@ -1267,8 +1271,12 @@ static ext2_ino_t find_inode(ext2_filsys fs, ext2_filsys jfs, struct ext2_inode 
 
 	*new_ino = 0;
 	priv->ret_ino = new_ino;
+	if (!priv || !priv->ret_ino) {
+		Log::error << "Critical: Null pointer in match_ino" << std::endl;
+		return BLOCK_ABORT;
+	}
 	priv->curr_name = curr_part;
-	struct dir_context ctx = {search_flags, DIRENT_FLAG_INCLUDE_REMOVED,
+	struct dir_context ctx = {(ext2_ino_t)search_flags, DIRENT_FLAG_INCLUDE_REMOVED,
 			buf, match_name2, priv, 0};
 	errcode_t code = extundelete_block_iterate3(fs, *inode, BLOCK_FLAG_DATA_ONLY,
 			NULL, match_ino, &ctx);
@@ -1519,9 +1527,10 @@ errcode_t restore_file(ext2_filsys fs, ext2_filsys jfs, const std::string& fname
 		<< "." << std::endl;
 		inode = (struct ext2_inode *) operator new(EXT2_INODE_SIZE(fs->super));
 		ext2fs_read_inode_full (fs, ino, inode, EXT2_INODE_SIZE(fs->super));
-		if (LINUX_S_ISDIR(inode->i_mode) && inode->i_blocks > 0)
-			Log::error << "Try altering the filename to one of the entries listed below." << std::endl;
-			print_directory_inode(fs, inode, ino);
+		        if (LINUX_S_ISDIR(inode->i_mode) && inode->i_blocks > 0) {
+                Log::error << "Try altering the filename to one of the entries listed below." << std::endl;
+                print_directory_inode(fs, inode, ino);
+		}
 		delete inode;
 		return EU_RESTORE_FAIL;
 	}
@@ -1558,6 +1567,10 @@ static errcode_t recover_inode(ext2_filsys fs, ext2_filsys jfs, ext2_ino_t ino,
 	// oldblks2 is (jblk, sequence)
 	std::list<block_pair_t> oldblks2;
 	std::pair<journal_map_t::iterator, journal_map_t::iterator> ret;
+	if (journ_map.empty()) {
+	Log::debug << "Journal map is empty for block " << blknum << std::endl;
+	return EU_RESTORE_FAIL;
+	}
 	ret = journ_map.equal_range(blknum);
 	journal_map_t::iterator it;
 	for(it = ret.first; it != ret.second; ++it) {

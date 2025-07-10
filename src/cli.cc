@@ -118,6 +118,7 @@ static void print_version(void)
 
 static void print_usage(std::ostream& os, std::string cmd)
 {
+  os << "Extundelete 0.2.4 Reloaded 2025-06-01 to support e2fsprogs 1.47+ by Tomasz Malewski\n";
   os << "Usage: " << cmd << " [options] [--] device-file\n";
   os << "Options:\n";
   os << "  --version, -[vV]       Print version and exit successfully.\n";
@@ -334,9 +335,10 @@ static errcode_t examine_fs(ext2_filsys fs)
 		if(infile.is_open()) {
 			while (!infile.eof()) {
 				infile.getline (name, namelen);
-				if(strlen(name) > 0)
+				if(strlen(name) > 0) {
 					errcode = restore_file (fs, jfs, std::string(name) );
 					if(errcode)  com_err(Config::progname.c_str(), errcode, "while restoring file %s.", name);
+					}
 			}
 			infile.close();
 		} else {

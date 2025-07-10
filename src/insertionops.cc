@@ -15,38 +15,24 @@
 // about various types of data we encounter in this program.
 std::ostream& operator<<(std::ostream& os, const ext2_inode& inode)
 {
-  // This was largely generated with:
-  //   awk 'BEGIN { decode=0 } /^struct ext2_inode / { decode=1 } /^};/ { decode=0 } { if (decode) print; }' /usr/include/ext2fs/ext2_fs.h | sed -rn 's/^[[:space:]]*(|\/\*[0-9A-F]*\*\/[[:space:]]*)__[[:alnum:]_]*[[:space:]]*(i_[[:alnum:]_]*)(;|\[[0-9]+\];)[[:space:]]*\/\*[[:space:]](.*)[[:space:]]\*\/.*/  os << "\4: " << inode.\2 << 'std::endl';/p'
-
-
   os << "File mode: " << inode.i_mode << std::endl;
-  os << "Low 16 bits of Owner Uid: " << inode.i_uid << std::endl;
-  os << "Size in bytes: " << EXT2_I_SIZE(&inode) << std::endl;
+  os << "User ID: " << inode.i_uid << std::endl;
+  os << "Size: " << inode.i_size << std::endl;
   os << "Access time: " << inode.i_atime << std::endl;
   os << "Creation time: " << inode.i_ctime << std::endl;
   os << "Modification time: " << inode.i_mtime << std::endl;
-  os << "Deletion Time: " << inode.i_dtime << std::endl;
-  os << "Low 16 bits of Group Id: " << inode.i_gid << std::endl;
+  os << "Deletion time: " << inode.i_dtime << std::endl;
+  os << "Group ID: " << inode.i_gid << std::endl;
   os << "Links count: " << inode.i_links_count << std::endl;
   os << "Blocks count: " << inode.i_blocks << std::endl;
-  //os << "Filesystem blocks count: " << inode.i_blocks * 512 / block_size_ << std::endl;
-  os << "File flags: " << inode.i_flags << std::endl;
-  os << "File version (for NFS): " << inode.i_generation << std::endl;
+  os << "Flags: " << inode.i_flags << std::endl;
+  os << "File version: " << inode.i_generation << std::endl;
   os << "File ACL: " << inode.i_file_acl << std::endl;
-  os << "Directory ACL: " << inode.i_dir_acl << std::endl;
   os << "Fragment address: " << inode.i_faddr << std::endl;
-  os << "Direct blocks: ";
-  for (int n = 0; n < EXT2_NDIR_BLOCKS; n++)
-  {
-    if (n!=0)
-      os << ", ";
-    os << inode.i_block[n];
-  }
+  os << "Reserved: ";
+  for (int i = 0; i < EXT2_N_BLOCKS; ++i)
+    os << inode.i_block[i] << " ";
   os << std::endl;
-  os << "Indirect block: " << inode.i_block[EXT2_IND_BLOCK] << std::endl;
-  os << "Double indirect block: " << inode.i_block[EXT2_DIND_BLOCK] << std::endl;
-  os << "Triple indirect block: " << inode.i_block[EXT2_TIND_BLOCK] << std::endl;
- 
   return os;
 }
 
